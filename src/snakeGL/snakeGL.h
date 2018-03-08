@@ -23,7 +23,7 @@ struct SnakeGlfw {
     GLfloat *vertices;
     GLuint *indices;
     struct Snake *snake;
-    GLuint VBO, VAO, EBO;
+    GLuint VBO, VAO, EBO, shaderProgram;
     struct Queue *commands;
     GLFWwindow* window;
 };

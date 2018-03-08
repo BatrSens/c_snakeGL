@@ -5,50 +5,58 @@
 #include "snakeGL.h"
 
 
-void snake_vertices(struct Snake *snake, GLfloat *vertices, GLuint *indices) {
-    int *coords = malloc(sizeof(int) * (snake->length + 1) * 2);
-    snake_coords(snake, coords);
-    float *snake_buffer = malloc(sizeof(float) * (snake->length + 1) * 2);
-    for (int i = 0; i < snake->length + 1; i++) {
-        snake_buffer[i * 2] = (float)coords[i * 2] - (float)snake->width / 2;
-        snake_buffer[i * 2 + 1] = (float)coords[i * 2 + 1] - (float)snake->height / 2;
-        //printf("%d %d |", snake_buffer[i * 2], snake_buffer[i * 2 + 1]);
+void snake_vertices(struct SnakeGlfw *sngl) {
+    int vertices_length = (sngl->snake->length + 1) * 24;
+
+    sngl->vertices = realloc(sngl->vertices, sizeof(GLfloat) * vertices_length);
+    sngl->indices = realloc(sngl->indices, sizeof(GLuint) * (sngl->snake->length + 1) * 6);
+
+    int *coords = malloc(sizeof(int) * (sngl->snake->length + 1) * 2);
+    snake_coords(sngl->snake, coords);
+    float *snake_buffer = malloc(sizeof(float) * (sngl->snake->length + 1) * 2);
+    for (int i = 0; i < sngl->snake->length + 1; i++) {
+        snake_buffer[i * 2] = (float)coords[i * 2] - (float)sngl->snake->width / 2;
+        snake_buffer[i * 2 + 1] = (float)coords[i * 2 + 1] - (float)sngl->snake->height / 2;
     }
     free(coords);
-    //printf("\n");
 
-    int vertices_length = (snake->length + 1) * 12;
-    for (int i = 2; i < vertices_length; i += 3)
-        vertices[i] = 0.0f;
+    GLfloat *vertices = sngl->vertices;
+    for (int i = 0; i < vertices_length; i += 6) {
+        vertices[i + 2] = vertices[i + 5] = 0.0f;
+        vertices[i + 3] = vertices[i + 4] = 1.0f;
+    }
 
-    float width_step = 1.0f / snake->width;
-    float height_step = 1.0f / snake->height;
+    vertices[4] = vertices[10] = vertices[16] = vertices[22] = 0.0f;
+
+    float width_step = 1.0f / sngl->snake->width;
+    float height_step = 1.0f / sngl->snake->height;
     float width_ratio = width_step * 2;
     float height_ratio = height_step * 2;
-    //printf("%f %f %f %f", width_step, width_ratio, height_step, height_ratio);
 
-    vertices[0] = (vertices[9] = snake_buffer[0] * width_ratio + width_step);
-    vertices[3] = vertices[0] + width_step;
-    vertices[6] = vertices[0] - width_step;
-    vertices[4] = (vertices[7] = snake_buffer[1] * height_ratio + height_step);
-    vertices[1] = vertices[4] + height_step;
-    vertices[10] = vertices[4] - height_step;
+    vertices[0] = (vertices[18] = snake_buffer[0] * width_ratio + width_step);
+    vertices[6] = vertices[0] + width_step;
+    vertices[12] = vertices[0] - width_step;
+    vertices[7] = (vertices[13] = snake_buffer[1] * height_ratio + height_step);
+    vertices[1] = vertices[7] + height_step;
+    vertices[19] = vertices[7] - height_step;
 
-    for (int i = 12; i < vertices_length; i += 12) {
-        vertices[i + 0] = (vertices[i + 3] =
-                                   (float)snake_buffer[i / 6] * width_ratio + width_ratio * 0.9f);
-        vertices[i + 6] = (vertices[i + 9] = vertices[i + 0] - width_ratio * 0.8f);
-        vertices[i + 1] = (vertices[i + 10] =
-                                   (float)snake_buffer[i / 6 + 1] * height_ratio + height_ratio * 0.9f);
-        vertices[i + 4] = (vertices[i + 7] = vertices[i + 1] - height_ratio * 0.8f);
+    for (int i = 24; i < vertices_length; i += 24) {
+        vertices[i + 0] = (vertices[i + 6] =
+                                   (float)snake_buffer[i / 12] * width_ratio + width_ratio * 0.9f);
+        vertices[i + 12] = (vertices[i + 18] = vertices[i + 0] - width_ratio * 0.8f);
+        vertices[i + 1] = (vertices[i + 19] =
+                                   (float)snake_buffer[i / 12 + 1] * height_ratio + height_ratio * 0.9f);
+        vertices[i + 7] = (vertices[i + 13] = vertices[i + 1] - height_ratio * 0.8f);
     }
+
+    GLuint *indices = sngl->indices;
 
     indices[0] = 0;
     indices[1] = (indices[3] = 1);
     indices[2] = (indices[4] = 2);
     indices[5] = 3;
 
-    for (int i = 1; i < snake->length + 1; i++) {
+    for (int i = 1; i < sngl->snake->length + 1; i++) {
         GLuint j = i * 4, k = i * 6;
         indices[k + 0] = j + 0;
         indices[k + 1] = (indices[k + 3] = j + 1);
@@ -91,23 +99,22 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 
 void update_picture(struct SnakeGlfw *sngl) {
-    sngl->vertices = realloc(sngl->vertices, sizeof(GLfloat) * (sngl->snake->length + 1) * 12);
-    sngl->indices = realloc(sngl->indices, sizeof(GLuint) * (sngl->snake->length + 1) * 6);
-    snake_vertices(sngl->snake, sngl->vertices, sngl->indices);
+    snake_vertices(sngl);
 
-    ptrdiff_t size_ver = (sizeof(GLfloat) * (sngl->snake->length + 1) * 12);
+    ptrdiff_t size_ver = (sizeof(GLfloat) * (sngl->snake->length + 1) * 24);
     glBufferData(GL_ARRAY_BUFFER, size_ver, sngl->vertices, GL_DYNAMIC_DRAW);
 
     ptrdiff_t size_ind = (sizeof(GLfloat) * (sngl->snake->length + 1) * 6);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, size_ind, sngl->indices, GL_DYNAMIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
 
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3* sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+
     glClear(GL_COLOR_BUFFER_BIT);
-
     glDrawElements(GL_TRIANGLES, (sngl->snake->length + 1) * 6, GL_UNSIGNED_INT, 0);
-
     glfwSwapBuffers(sngl->window);
 }
 
@@ -126,15 +133,16 @@ int ping_snake(struct SnakeGlfw *sngl) {
 
 void snake_start(struct SnakeGlfw *sngl) {
     int timer = 0;
+    update_picture(sngl);
     while (!glfwWindowShouldClose(sngl->window)) {
-        update_picture(sngl);
         glfwPollEvents();
-        usleep(10000);
+        usleep(15000);
         timer++;
         if (timer == snake_speed(sngl->snake)) {
             timer = 0;
             if (ping_snake(sngl))
                 glfwSetWindowShouldClose(sngl->window, GL_TRUE);
+            update_picture(sngl);
         }
     }
 }
@@ -149,13 +157,17 @@ int snake_init_glfw(struct SnakeGlfw *sngl, GLuint size_x, GLuint size_y, int sp
 
     const GLchar* vertexShaderSource = "#version 330 core\n"
             "layout (location = 0) in vec3 position;\n"
+            "layout (location = 1) in vec3 color;\n"
+            "out vec3 ourColor;\n"
             "void main() {\n"
             "gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
+            "ourColor = color;\n"
             "}\0";
     const GLchar* fragmentShaderSource = "#version 330 core\n"
+            "in vec3 ourColor;\n"
             "out vec4 color;\n"
             "void main() {\n"
-            "color = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
+            "color = vec4(ourColor, 1.0f);\n"
             "}\n\0";
 
     glfwInit();
@@ -231,11 +243,15 @@ int snake_init_glfw(struct SnakeGlfw *sngl, GLuint size_x, GLuint size_y, int sp
     glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
 
     sngl->snake = init_snake(size_x, size_y, speed);
-    sngl->vertices = malloc(sizeof(GLfloat) * (sngl->snake->length + 1) * 12);
+    sngl->vertices = malloc(sizeof(GLfloat) * (sngl->snake->length + 1) * 24);
     sngl->indices = malloc(sizeof(GLuint) * (sngl->snake->length + 1) * 6);
-    snake_vertices(sngl->snake, sngl->vertices, sngl->indices);
     sngl->commands = init_queue();
+    sngl->shaderProgram = shaderProgram;
     commands = sngl->commands;
+
+    GLint vertexColorLocation = glGetUniformLocation(sngl->shaderProgram, "inColor");
+    glUniform4f(vertexColorLocation, 0.0f, 1.0f, 0.0f, 1.0f);
+
     return 0;
 }
 

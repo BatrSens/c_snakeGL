@@ -7,6 +7,7 @@
 
 
 int main(int argc, char **argv) {
+
     printf("Flags:\n");
     printf("-w [WIDTH]      from 5 to 40, default: 15\n");
     printf("-h [HEIGHT]     from 5 to 20, default: 7\n");
