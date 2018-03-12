@@ -29,7 +29,7 @@ struct SnakeGlfw {
 };
 
 //void snake_vertices(struct Snake *snake, GLfloat *vertices, GLuint *indices);
-int snake_init_glfw(struct SnakeGlfw *sngl, GLuint WIDTH, GLuint HEIGHT, int speed);
+int snake_init_glfw(struct SnakeGlfw *sngl, GLuint WIDTH, GLuint HEIGHT, int speed, int mode);
 void snake_start(struct SnakeGlfw *sngl);
 void snake_end(struct SnakeGlfw *sngl);
 

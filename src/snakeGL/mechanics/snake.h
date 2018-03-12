@@ -9,6 +9,8 @@
 #define SNAKE_RIGHT 1
 #define SNAKE_DOWN 2
 #define SNAKE_LEFT 3
+#define MODE_CLASSIC 0
+#define MODE_WALLS 1
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -25,12 +27,17 @@ struct Segment {
 };
 
 struct Snake {
+    int mode;
+
     unsigned int width;
     unsigned int height;
 
     struct Segment *tail;
     struct Segment *head;
     struct Food *food;
+
+    struct Segment *walls;
+    unsigned int wall_count;
 
     unsigned int length;
 
@@ -42,7 +49,7 @@ struct Snake {
 
 /////////////////////////////////////////////
 
-struct Snake *init_snake(unsigned int width, unsigned int height, int speed);
+struct Snake *init_snake(unsigned int width, unsigned int height, int speed, int mode);
 void remove_snake(struct Snake *snake);
 
 //void replace_food(struct Snake *snake);
